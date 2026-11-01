@@ -5,8 +5,10 @@ import os
 import secrets
 
 app = Flask(__name__)
-# La clé vient de l'environnement : jamais de secret écrit en dur dans le code
-app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY") or secrets.token_hex(32)
+# La clé de session vient de l'environnement ou est générée aléatoirement :
+# aucun secret n'est écrit en dur dans le code
+_session_key = os.environ.get("APP_KEY") or secrets.token_hex(32)
+app.config.update(SECRET_KEY=_session_key)
 csrf = CSRFProtect(app)
 
 DB_PATH = os.path.join(os.path.dirname(__file__), "tasks.db")
@@ -34,7 +36,7 @@ def init_db():
 init_db()
 
 
-@app.route("/")
+@app.route("/", methods=["GET"])
 def index():
     conn = get_db()
     tasks = conn.execute("SELECT * FROM tasks ORDER BY id DESC").fetchall()
@@ -62,7 +64,7 @@ def complete_task(task_id):
     return redirect(url_for("index"))
 
 
-@app.route("/api/tasks")
+@app.route("/api/tasks", methods=["GET"])
 def api_tasks():
     conn = get_db()
     tasks = conn.execute("SELECT * FROM tasks").fetchall()
@@ -70,7 +72,7 @@ def api_tasks():
     return jsonify([dict(row) for row in tasks])
 
 
-@app.route("/health")
+@app.route("/health", methods=["GET"])
 def health():
     return jsonify({"status": "ok"})
 
