@@ -46,6 +46,13 @@ jobs:
     name: Analyse du code (SonarQube)
     runs-on: self-hosted
     steps:
+      - name: Nettoyage préalable (fichiers root éventuels)
+        run: |
+          if [ -d "$GITHUB_WORKSPACE" ]; then
+            docker run --rm -v "$GITHUB_WORKSPACE":/w alpine \
+              sh -c "rm -rf /w/deps /w/reports"
+          fi
+
       - name: Checkout du code
         uses: actions/checkout@v4
         with:
@@ -61,20 +68,28 @@ jobs:
     name: Scan des dépendances (OWASP Dependency-Check)
     runs-on: self-hosted
     steps:
+      - name: Nettoyage préalable (fichiers root éventuels)
+        run: |
+          if [ -d "$GITHUB_WORKSPACE" ]; then
+            docker run --rm -v "$GITHUB_WORKSPACE":/w alpine \
+              sh -c "rm -rf /w/deps /w/reports"
+          fi
+
       - name: Checkout du code
         uses: actions/checkout@v4
 
       - name: Installer les dépendances dans deps/
         run: |
-          docker run --rm -v "$PWD":/src alpine rm -rf /src/deps
           mkdir -p deps
-          docker run --rm -v "$PWD":/src -w /src python:3.12-slim \
+          docker run --rm --user "$(id -u):$(id -g)" \
+            -e HOME=/tmp -e PIP_CACHE_DIR=/tmp/pip \
+            -v "$PWD":/src -w /src python:3.12-slim \
             pip install -q -r requirements.txt --target deps
 
       - name: OWASP Dependency-Check
         run: |
           mkdir -p reports && chmod 777 reports
-          docker run --rm \
+          docker run --rm --user "$(id -u):$(id -g)" \
             -v "$PWD":/src \
             -v "$PWD/reports":/report \
             -v dc-data:/usr/share/dependency-check/data \
