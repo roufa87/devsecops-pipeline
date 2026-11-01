@@ -1,8 +1,14 @@
 from flask import Flask, render_template, request, redirect, url_for, jsonify
+from flask_wtf.csrf import CSRFProtect
 import sqlite3
 import os
+import secrets
 
 app = Flask(__name__)
+# La clé vient de l'environnement : jamais de secret écrit en dur dans le code
+app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY") or secrets.token_hex(32)
+csrf = CSRFProtect(app)
+
 DB_PATH = os.path.join(os.path.dirname(__file__), "tasks.db")
 
 
@@ -23,6 +29,9 @@ def init_db():
     """)
     conn.commit()
     conn.close()
+
+
+init_db()
 
 
 @app.route("/")
@@ -67,5 +76,4 @@ def health():
 
 
 if __name__ == "__main__":
-    init_db()
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(host="127.0.0.1", port=5000)
