@@ -107,3 +107,42 @@ jobs:
         with:
           name: dependency-check-report
           path: reports/
+
+  trivy-scan:
+    name: Scan de l'image Docker (Trivy)
+    runs-on: self-hosted
+    steps:
+      - name: Checkout du code
+        uses: actions/checkout@v4
+
+      - name: Build de l'image
+        run: docker build -t taskmanager:${{ github.sha }} .
+
+      - name: Trivy - rapport complet (informatif)
+        run: |
+          mkdir -p reports
+          docker run --rm \
+            -v /var/run/docker.sock:/var/run/docker.sock \
+            -v trivy-cache:/root/.cache/ \
+            aquasec/trivy:latest image \
+            --severity CRITICAL,HIGH \
+            --exit-code 0 \
+            taskmanager:${{ github.sha }} > reports/trivy-complet.txt
+
+      - name: Trivy - blocage (CVE corrigeables HIGH/CRITICAL)
+        run: |
+          docker run --rm \
+            -v /var/run/docker.sock:/var/run/docker.sock \
+            -v trivy-cache:/root/.cache/ \
+            aquasec/trivy:latest image \
+            --severity CRITICAL,HIGH \
+            --ignore-unfixed \
+            --exit-code 1 \
+            taskmanager:${{ github.sha }}
+
+      - name: Publier le rapport
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-report
+          path: reports/
