@@ -12,6 +12,7 @@
         ul { list-style: none; padding: 0; }
         li { padding: 10px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; }
         .done { text-decoration: line-through; color: #999; }
+        .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
     </style>
 </head>
 <body>
@@ -19,7 +20,8 @@
 
     <form action="/add" method="POST">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <input type="text" name="title" placeholder="Nouvelle tâche..." required>
+        <label for="task-title" class="sr-only">Nouvelle tâche</label>
+        <input type="text" id="task-title" name="title" placeholder="Nouvelle tâche..." required>
         <button type="submit">Ajouter</button>
     </form>
 
