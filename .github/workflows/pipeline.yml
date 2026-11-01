@@ -41,3 +41,18 @@ jobs:
       - name: Vérifier que l'application démarre
         run: |
           python -c "from app import app; print('Import OK, application valide')"
+
+  sonarqube-scan:
+    name: Analyse du code (SonarQube)
+    runs-on: self-hosted
+    steps:
+      - name: Checkout du code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Scan SonarQube
+        uses: sonarsource/sonarqube-scan-action@v5
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
