@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, jsonify
 from flask_wtf.csrf import CSRFProtect
+from prometheus_flask_exporter import PrometheusMetrics  # AJOUT
 import sqlite3
 import os
 import secrets
@@ -10,6 +11,8 @@ app = Flask(__name__)
 _session_key = os.environ.get("APP_KEY") or secrets.token_hex(32)
 app.config.update(SECRET_KEY=_session_key)
 csrf = CSRFProtect(app)
+metrics = PrometheusMetrics(app)  # AJOUT : expose /metrics
+metrics.info("app_info", "Task manager", version="1.0.0")  # AJOUT
 
 DB_PATH = os.path.join(os.path.dirname(__file__), "tasks.db")
 
