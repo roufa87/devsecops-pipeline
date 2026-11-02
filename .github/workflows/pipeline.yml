@@ -146,3 +146,34 @@ jobs:
         with:
           name: trivy-report
           path: reports/
+
+  deploy:
+    name: Déploiement (Docker Compose)
+    runs-on: self-hosted
+    needs: [secret-scan, build-and-test, sonarqube-scan, dependency-check, trivy-scan]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - name: Nettoyage préalable (fichiers root éventuels)
+        run: |
+          if [ -d "$GITHUB_WORKSPACE" ]; then
+            docker run --rm -v "$GITHUB_WORKSPACE":/w alpine \
+              sh -c "rm -rf /w/deps /w/reports"
+          fi
+
+      - name: Checkout du code
+        uses: actions/checkout@v4
+
+      - name: Déploiement
+        env:
+          APP_KEY: ${{ secrets.APP_KEY }}
+          GRAFANA_PASSWORD: ${{ secrets.GRAFANA_PASSWORD }}
+        run: docker compose up -d --build
+
+      - name: Smoke test
+        run: |
+          for i in $(seq 1 15); do
+            curl -fs http://localhost:5000/health && exit 0
+            sleep 2
+          done
+          docker compose logs app
+          exit 1
