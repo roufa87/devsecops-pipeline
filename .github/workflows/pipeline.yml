@@ -167,7 +167,7 @@ jobs:
         env:
           APP_KEY: ${{ secrets.APP_KEY }}
           GRAFANA_PASSWORD: ${{ secrets.GRAFANA_PASSWORD }}
-        run: docker compose up -d --build
+        run: docker compose up -d --build --force-recreate
 
       - name: Smoke test
         run: |
