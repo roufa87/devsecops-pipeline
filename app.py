@@ -9,12 +9,33 @@ app = Flask(__name__)
 # La clé de session vient de l'environnement ou est générée aléatoirement :
 # aucun secret n'est écrit en dur dans le code
 _session_key = os.environ.get("APP_KEY") or secrets.token_hex(32)
-app.config.update(SECRET_KEY=_session_key)
+app.config.update(
+    SECRET_KEY=_session_key,
+    SESSION_COOKIE_SAMESITE="Lax",
+    SESSION_COOKIE_HTTPONLY=True,
+)
 csrf = CSRFProtect(app)
 metrics = PrometheusMetrics(app)  # AJOUT : expose /metrics
 metrics.info("app_info", "Task manager", version="1.0.0")  # AJOUT
 
 DB_PATH = os.path.join(os.path.dirname(__file__), "tasks.db")
+
+
+@app.after_request
+def add_security_headers(response):
+    response.headers["Content-Security-Policy"] = (
+        "default-src 'self'; frame-ancestors 'none'; "
+        "form-action 'self'; base-uri 'self'"
+    )
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["Permissions-Policy"] = (
+        "geolocation=(), microphone=(), camera=()"
+    )
+    response.headers["Cross-Origin-Opener-Policy"] = "same-origin"
+    response.headers["Cross-Origin-Embedder-Policy"] = "require-corp"
+    response.headers["Cross-Origin-Resource-Policy"] = "same-origin"
+    return response
 
 
 def get_db():

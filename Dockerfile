@@ -10,6 +10,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copie ciblée : uniquement ce dont l'application a besoin
 COPY app.py .
 COPY templates/ templates/
+COPY static/ static/
 
 RUN chown -R appuser:appuser /app
 USER appuser

@@ -3,17 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Gestionnaire de tâches</title>
-    <style>
-        body { font-family: Arial, sans-serif; max-width: 600px; margin: 40px auto; padding: 0 20px; }
-        h1 { color: #2c3e50; }
-        form { display: flex; gap: 10px; margin-bottom: 20px; }
-        input[type=text] { flex: 1; padding: 8px; }
-        button { padding: 8px 16px; cursor: pointer; }
-        ul { list-style: none; padding: 0; }
-        li { padding: 10px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; }
-        .done { text-decoration: line-through; color: #999; }
-        .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
     <h1>📋 Mes tâches</h1>
@@ -30,7 +20,7 @@
         <li class="{{ 'done' if task.done else '' }}">
             {{ task.title }}
             {% if not task.done %}
-            <form action="/complete/{{ task.id }}" method="POST" style="margin:0;">
+            <form action="/complete/{{ task.id }}" method="POST" class="inline-form">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <button type="submit">✓ Terminé</button>
             </form>

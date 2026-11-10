@@ -177,3 +177,33 @@ jobs:
           done
           docker compose logs app
           exit 1
+
+  dast:
+    name: Test dynamique (OWASP ZAP)
+    runs-on: self-hosted
+    needs: deploy
+    steps:
+      - name: Attendre l'application
+        run: |
+          for i in $(seq 1 15); do
+            curl -fs http://localhost:5000/health && exit 0
+            sleep 2
+          done
+          exit 1
+
+      - name: Scan ZAP (baseline)
+        run: |
+          mkdir -p zap-reports && chmod 777 zap-reports
+          docker run --rm \
+            --add-host host.docker.internal:host-gateway \
+            -v "$PWD/zap-reports":/zap/wrk:rw \
+            ghcr.io/zaproxy/zaproxy:stable \
+            zap-baseline.py -t http://host.docker.internal:5000 \
+            -r zap-rapport.html -I
+
+      - name: Publier le rapport
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: zap-report
+          path: zap-reports/
